@@ -107,7 +107,7 @@ public class MainActivity extends SwipeRefreshBaseActivity {
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         new Handler().postDelayed(() -> setRefresh(true), 358);
-        Log.e("onPostCreate","调用了");
+        Log.e("onPostCreate", "调用了");
         loadData(true);
     }
 
@@ -118,16 +118,28 @@ public class MainActivity extends SwipeRefreshBaseActivity {
         UmengUpdateAgent.setUpdateOnlyWifi(false);
     }
 
-
+    /**
+     * 设置RecycleView 的样式
+     */
     private void setupRecyclerView() {
+        //设置GridView 布局样式
         final StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
         mMeizhiListAdapter = new MeizhiListAdapter(this, mMeizhiList);
         mRecyclerView.setAdapter(mMeizhiListAdapter);
-        new Once(this).show("tip_guide_6", () -> {
+        /*new Once(this).show("tip_guide_6", () -> {
             Snackbar.make(mRecyclerView, getString(R.string.tip_guide), Snackbar.LENGTH_INDEFINITE).setAction(R.string.i_know, v -> {
             }).show();
+        });*/
+
+        new Once(this).show("tip_guide_6", new Once.OnceCallback() {
+            @Override
+            public void onOnce() {
+                Snackbar.make(mRecyclerView, getString(R.string.tip_guide), Snackbar.LENGTH_INDEFINITE).setAction(R.string.i_know, v -> {
+                }).show();
+            }
         });
+
 
         mRecyclerView.addOnScrollListener(getOnBottomListener(layoutManager));
         mMeizhiListAdapter.setOnMeizhiTouchListener(getOnMeizhiTouchListener());
@@ -145,13 +157,13 @@ public class MainActivity extends SwipeRefreshBaseActivity {
         Subscription s = Observable
                 //合并多个数据流，然后发送(Emit)最终合并的数据
                 .zip(sGankIO.getMeizhiData(mPage), sGankIO.get休息视频Data(mPage), this::createMeizhiDataWith休息视频Desc)//
-               //事件对象的直接变换 一对一的转换
+                //事件对象的直接变换 一对一的转换
                 .map(meizhiData -> meizhiData.results)//
-               //将事件对象变换 返回一个Observable
+                //将事件对象变换 返回一个Observable
                 .flatMap(Observable::from)//
-               //排序
+                //排序
                 .toSortedList((meizhi1, meizhi2) -> meizhi2.publishedAt.compareTo(meizhi1.publishedAt))//
-               //保存/缓存网络结果
+                //保存/缓存网络结果
                 .doOnNext(this::saveMeizhis)//
                 //指定线程
                 .observeOn(AndroidSchedulers.mainThread())//
@@ -159,13 +171,13 @@ public class MainActivity extends SwipeRefreshBaseActivity {
                 .finallyDo(() -> setRefresh(false))//
 
                 .subscribe(meizhis -> {
-            if (clean){
-                mMeizhiList.clear();
-            }
-            mMeizhiList.addAll(meizhis);
-            mMeizhiListAdapter.notifyDataSetChanged();
-            setRefresh(false);
-        }, throwable -> loadError(throwable));
+                    if (clean) {
+                        mMeizhiList.clear();
+                    }
+                    mMeizhiList.addAll(meizhis);
+                    mMeizhiListAdapter.notifyDataSetChanged();
+                    setRefresh(false);
+                }, throwable -> loadError(throwable));
         // @formatter:on
         addSubscription(s);
     }
@@ -173,6 +185,7 @@ public class MainActivity extends SwipeRefreshBaseActivity {
 
     /**
      * 错误处理
+     *
      * @param throwable
      */
     private void loadError(Throwable throwable) {
@@ -221,7 +234,36 @@ public class MainActivity extends SwipeRefreshBaseActivity {
 
 
     private OnMeizhiTouchListener getOnMeizhiTouchListener() {
-        return (v, meizhiView, card, meizhi) -> {
+
+        return new OnMeizhiTouchListener() {
+            @Override
+            public void onTouch(View v, View meizhiView, View card, Meizhi meizhi) {
+                if (meizhi == null)
+                    return;
+                if (v == meizhiView && !mMeizhiBeTouched) {
+                    mMeizhiBeTouched = true;
+
+                    Picasso.with(MainActivity.this).load(meizhi.url).fetch(new Callback() {
+
+                        @Override
+                        public void onSuccess() {
+                            mMeizhiBeTouched = false;
+                            startPictureActivity(meizhi, meizhiView);
+                        }
+
+
+                        @Override
+                        public void onError() {
+                            mMeizhiBeTouched = false;
+                        }
+                    });
+                } else if (v == card) {
+                    startGankActivity(meizhi.publishedAt);
+                }
+            }
+        };
+
+       /* return (v, meizhiView, card, meizhi) -> {
             if (meizhi == null)
                 return;
             if (v == meizhiView && !mMeizhiBeTouched) {
@@ -244,7 +286,7 @@ public class MainActivity extends SwipeRefreshBaseActivity {
             } else if (v == card) {
                 startGankActivity(meizhi.publishedAt);
             }
-        };
+        };*/
     }
 
 
@@ -332,7 +374,8 @@ public class MainActivity extends SwipeRefreshBaseActivity {
 
 
     /**
-     * RecyclerView设置滚动监听
+     * RecyclerView 设置滚动监听
+     *
      * @param layoutManager
      * @return
      */
@@ -342,7 +385,9 @@ public class MainActivity extends SwipeRefreshBaseActivity {
             public void onScrolled(RecyclerView rv, int dx, int dy) {
                 //是否到底部了
                 boolean isBottom = layoutManager.findLastCompletelyVisibleItemPositions(new int[2])[1] >= mMeizhiListAdapter.getItemCount() - PRELOAD_SIZE;
+                //上拉加载更多
                 if (!mSwipeRefreshLayout.isRefreshing() && isBottom) {
+                    //第一次时不调用
                     if (!mIsFirstTimeTouchBottom) {
                         mSwipeRefreshLayout.setRefreshing(true);
                         mPage += 1;

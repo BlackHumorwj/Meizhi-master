@@ -39,6 +39,7 @@ public class Once {
 
     public void show(String tagKey, OnceCallback callback) {
         boolean isSecondTime = mSharedPreferences.getBoolean(tagKey, false);
+        //第一次提示
         if (!isSecondTime) {
             callback.onOnce();
             SharedPreferences.Editor editor = mSharedPreferences.edit();

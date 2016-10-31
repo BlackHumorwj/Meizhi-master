@@ -91,7 +91,10 @@ public class MeizhiListAdapter extends RecyclerView.Adapter<MeizhiListAdapter.Vi
         return mList.size();
     }
 
-
+    /**
+     * 接口回调 设置点击事件
+     * @param onMeizhiTouchListener
+     */
     public void setOnMeizhiTouchListener(OnMeizhiTouchListener onMeizhiTouchListener) {
         this.mOnMeizhiTouchListener = onMeizhiTouchListener;
     }
