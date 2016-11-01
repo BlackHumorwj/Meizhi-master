@@ -28,7 +28,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
 import java.io.InputStream;
+
 import me.drakeet.meizhi.BuildConfig;
 
 /**
@@ -81,13 +83,15 @@ public class LoveVideoView extends WebView {
 
     private class LoveClient extends WebViewClient {
 
-        @Override public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
             view.loadUrl(url);
             return true;
         }
 
 
-        @Override public void onPageFinished(WebView view, String url) {
+        @Override
+        public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             // 这些视频需要hack CSS才能达到全屏播放的效果
             if (url.contains("www.vmovier.com")) {
@@ -126,9 +130,11 @@ public class LoveVideoView extends WebView {
 
     private class Chrome extends WebChromeClient implements MediaPlayer.OnCompletionListener {
 
-        @Override public void onCompletion(MediaPlayer player) {
+        @Override
+        public void onCompletion(MediaPlayer player) {
             if (player != null) {
-                if (player.isPlaying()) player.stop();
+                if (player.isPlaying())
+                    player.stop();
                 player.reset();
                 player.release();
             }

@@ -32,24 +32,27 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
+
 import com.bumptech.glide.Glide;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.otto.Subscribe;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import me.drakeet.meizhi.DrakeetFactory;
 import me.drakeet.meizhi.LoveBus;
 import me.drakeet.meizhi.R;
 import me.drakeet.meizhi.data.GankData;
-import me.drakeet.meizhi.event.OnKeyBackClickEvent;
 import me.drakeet.meizhi.data.entity.Gank;
+import me.drakeet.meizhi.event.OnKeyBackClickEvent;
 import me.drakeet.meizhi.ui.adapter.GankListAdapter;
 import me.drakeet.meizhi.ui.base.BaseActivity;
 import me.drakeet.meizhi.util.LoveStrings;
@@ -66,22 +69,26 @@ import rx.android.schedulers.AndroidSchedulers;
  */
 public class GankFragment extends Fragment {
 
-    private final String TAG = "GankFragment";
-    private static final String ARG_YEAR = "year";
+    private final        String TAG       = "GankFragment";
+    private static final String ARG_YEAR  = "year";
     private static final String ARG_MONTH = "month";
-    private static final String ARG_DAY = "day";
+    private static final String ARG_DAY   = "day";
 
-    @Bind(R.id.rv_gank) RecyclerView mRecyclerView;
-    @Bind(R.id.stub_empty_view) ViewStub mEmptyViewStub;
-    @Bind(R.id.stub_video_view) ViewStub mVideoViewStub;
-    @Bind(R.id.iv_video) VideoImageView mVideoImageView;
+    @Bind(R.id.rv_gank)
+    RecyclerView   mRecyclerView;
+    @Bind(R.id.stub_empty_view)
+    ViewStub       mEmptyViewStub;
+    @Bind(R.id.stub_video_view)
+    ViewStub       mVideoViewStub;
+    @Bind(R.id.iv_video)
+    VideoImageView mVideoImageView;
     LoveVideoView mVideoView;
 
     int mYear, mMonth, mDay;
     List<Gank> mGankList;
-    String mVideoPreviewUrl;
+    String     mVideoPreviewUrl;
     boolean mIsVideoViewInflated = false;
-    Subscription mSubscription;
+    Subscription    mSubscription;
     GankListAdapter mAdapter;
 
 
@@ -104,7 +111,8 @@ public class GankFragment extends Fragment {
     }
 
 
-    @Override public void onCreate(Bundle savedInstanceState) {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mGankList = new ArrayList<>();
         mAdapter = new GankListAdapter(mGankList);
@@ -132,9 +140,11 @@ public class GankFragment extends Fragment {
     }
 
 
-    @Override public void onViewCreated(View view, Bundle savedInstanceState) {
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (mGankList.size() == 0) loadData();
+        if (mGankList.size() == 0)
+            loadData();
         if (mVideoPreviewUrl != null) {
             Glide.with(this).load(mVideoPreviewUrl).into(mVideoImageView);
         }
@@ -151,29 +161,20 @@ public class GankFragment extends Fragment {
     private void loadData() {
         loadVideoPreview();
         // @formatter:off
-        mSubscription = BaseActivity.sGankIO
-                .getGankData(mYear, mMonth, mDay)
-                .map(data -> data.results)
-                .map(this::addAllResults)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(list -> {
-                    if (list.isEmpty()) {showEmptyView();}
-                    else {mAdapter.notifyDataSetChanged();}
-                }, Throwable::printStackTrace);
+        mSubscription = BaseActivity.sGankIO.getGankData(mYear, mMonth, mDay).map(data -> data.results).map(this::addAllResults).observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
+            if (list.isEmpty()) {
+                showEmptyView();
+            } else {
+                mAdapter.notifyDataSetChanged();
+            }
+        }, Throwable::printStackTrace);
         // @formatter:on
     }
 
 
     private void loadVideoPreview() {
         String where = String.format("{\"tag\":\"%d-%d-%d\"}", mYear, mMonth, mDay);
-        DrakeetFactory.getDrakeetSingleton()
-                      .getDGankData(where)
-                      .map(dGankData -> dGankData.results)
-                      .single(dGanks -> dGanks.size() > 0)
-                      .map(dGanks -> dGanks.get(0))
-                      .observeOn(AndroidSchedulers.mainThread())
-                      .subscribe(dGank -> startPreview(dGank.preview),
-                              throwable -> getOldVideoPreview(new OkHttpClient()));
+        DrakeetFactory.getDrakeetSingleton().getDGankData(where).map(dGankData -> dGankData.results).single(dGanks -> dGanks.size() > 0).map(dGanks -> dGanks.get(0)).observeOn(AndroidSchedulers.mainThread()).subscribe(dGank -> startPreview(dGank.preview), throwable -> getOldVideoPreview(new OkHttpClient()));
     }
 
 
@@ -181,12 +182,14 @@ public class GankFragment extends Fragment {
         String url = "http://gank.io/" + String.format("%s/%s/%s", mYear, mMonth, mDay);
         Request request = new Request.Builder().url(url).build();
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(Request request, IOException e) {
+            @Override
+            public void onFailure(Request request, IOException e) {
                 e.printStackTrace();
             }
 
 
-            @Override public void onResponse(Response response) throws IOException {
+            @Override
+            public void onResponse(Response response) throws IOException {
                 String body = response.body().string();
                 mVideoPreviewUrl = LoveStrings.getVideoPreviewImageUrl(body);
                 startPreview(mVideoPreviewUrl);
@@ -199,30 +202,36 @@ public class GankFragment extends Fragment {
         mVideoPreviewUrl = preview;
         if (preview != null && mVideoImageView != null) {
             // @formatter:off
-            mVideoImageView.post(() ->
-                Glide.with(mVideoImageView.getContext())
-                   .load(preview)
-                   .into(mVideoImageView));
+            mVideoImageView.post(() -> Glide.with(mVideoImageView.getContext()).load(preview).into(mVideoImageView));
             // @formatter:on
         }
     }
 
 
-    private void showEmptyView() {mEmptyViewStub.inflate();}
+    private void showEmptyView() {
+        mEmptyViewStub.inflate();
+    }
 
 
     private List<Gank> addAllResults(GankData.Result results) {
-        if (results.androidList != null) mGankList.addAll(results.androidList);
-        if (results.iOSList != null) mGankList.addAll(results.iOSList);
-        if (results.appList != null) mGankList.addAll(results.appList);
-        if (results.拓展资源List != null) mGankList.addAll(results.拓展资源List);
-        if (results.瞎推荐List != null) mGankList.addAll(results.瞎推荐List);
-        if (results.休息视频List != null) mGankList.addAll(0, results.休息视频List);
+        if (results.androidList != null)
+            mGankList.addAll(results.androidList);
+        if (results.iOSList != null)
+            mGankList.addAll(results.iOSList);
+        if (results.appList != null)
+            mGankList.addAll(results.appList);
+        if (results.拓展资源List != null)
+            mGankList.addAll(results.拓展资源List);
+        if (results.瞎推荐List != null)
+            mGankList.addAll(results.瞎推荐List);
+        if (results.休息视频List != null)
+            mGankList.addAll(0, results.休息视频List);
         return mGankList;
     }
 
 
-    @OnClick(R.id.header_appbar) void onPlayVideo() {
+    @OnClick(R.id.header_appbar)
+    void onPlayVideo() {
         resumeVideoView();
         getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         if (mGankList.size() > 0 && mGankList.get(0).type.equals("休息视频")) {
@@ -243,10 +252,8 @@ public class GankFragment extends Fragment {
                     mIsVideoViewInflated = true;
                     String tip = getString(R.string.tip_video_play);
                     // @formatter:off
-                    new Once(mVideoView.getContext()).show(tip, () ->
-                            Snackbar.make(mVideoView, tip, Snackbar.LENGTH_INDEFINITE)
-                                    .setAction(R.string.i_know, v -> {})
-                                    .show());
+                    new Once(mVideoView.getContext()).show(tip, () -> Snackbar.make(mVideoView, tip, Snackbar.LENGTH_INDEFINITE).setAction(R.string.i_know, v -> {
+                    }).show());
                     // @formatter:on
                 }
                 if (mGankList.size() > 0 && mGankList.get(0).type.equals("休息视频")) {
@@ -270,13 +277,15 @@ public class GankFragment extends Fragment {
     }
 
 
-    @Override public void onConfigurationChanged(Configuration newConfig) {
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
         setVideoViewPosition(newConfig);
         super.onConfigurationChanged(newConfig);
     }
 
 
-    @Subscribe public void onKeyBackClick(OnKeyBackClickEvent event) {
+    @Subscribe
+    public void onKeyBackClick(OnKeyBackClickEvent event) {
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
@@ -284,7 +293,8 @@ public class GankFragment extends Fragment {
     }
 
 
-    @Override public boolean onOptionsItemSelected(MenuItem item) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
             case R.id.action_share:
@@ -306,22 +316,22 @@ public class GankFragment extends Fragment {
 
 
     private void openTodaySubject() {
-        String url = getString(R.string.url_gank_io) +
-                String.format("%s/%s/%s", mYear, mMonth, mDay);
-        Intent intent = WebActivity.newIntent(getActivity(), url,
-                getString(R.string.action_subject));
+        String url = getString(R.string.url_gank_io) + String.format("%s/%s/%s", mYear, mMonth, mDay);
+        Intent intent = WebActivity.newIntent(getActivity(), url, getString(R.string.action_subject));
         startActivity(intent);
     }
 
 
-    @Override public void onResume() {
+    @Override
+    public void onResume() {
         super.onResume();
         LoveBus.getLovelySeat().register(this);
         resumeVideoView();
     }
 
 
-    @Override public void onPause() {
+    @Override
+    public void onPause() {
         super.onPause();
         LoveBus.getLovelySeat().unregister(this);
         pauseVideoView();
@@ -329,15 +339,18 @@ public class GankFragment extends Fragment {
     }
 
 
-    @Override public void onDestroyView() {
+    @Override
+    public void onDestroyView() {
         super.onDestroyView();
         ButterKnife.unbind(this);
     }
 
 
-    @Override public void onDestroy() {
+    @Override
+    public void onDestroy() {
         super.onDestroy();
-        if (mSubscription != null) mSubscription.unsubscribe();
+        if (mSubscription != null)
+            mSubscription.unsubscribe();
         resumeVideoView();
     }
 

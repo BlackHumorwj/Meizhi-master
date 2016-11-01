@@ -38,11 +38,18 @@ import rx.subscriptions.CompositeSubscription;
  */
 public class BaseActivity extends AppCompatActivity {
 
+    /**
+     * 工厂模式获取 GankApi
+     */
     public static final GankApi sGankIO = DrakeetFactory.getGankIOSingleton();
 
     private CompositeSubscription mCompositeSubscription;
 
 
+    /**
+     * 初始化一组订阅对象容器 可以添加多个订阅者
+     * @return 订阅者容器
+     */
     public CompositeSubscription getCompositeSubscription() {
         if (this.mCompositeSubscription == null) {
             this.mCompositeSubscription = new CompositeSubscription();
@@ -52,8 +59,8 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * 添加订阅
-     * @param s
+     * 添加订阅者对象到订阅容器
+     * @param s 单个的订阅者对象
      */
     public void addSubscription(Subscription s) {
         if (this.mCompositeSubscription == null) {
@@ -92,6 +99,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (this.mCompositeSubscription != null) {
+            //取消订阅容器中所有的订阅对象
             this.mCompositeSubscription.unsubscribe();
         }
     }

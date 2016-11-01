@@ -24,6 +24,20 @@
     android:layout_height="match_parent"
     tools:context="me.drakeet.meizhi.ui.GankFragment">
 
+    <ViewStub
+        android:id="@+id/stub_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/gank_header_height"
+        android:layout="@layout/view_empty"/>
+
+    <ViewStub
+        android:id="@+id/stub_video_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout="@layout/view_video"
+        android:inflatedId="@+id/inflate_video_view"/>
+
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/cl_content"
         android:layout_width="match_parent"
@@ -76,19 +90,5 @@
         </me.henrytao.smoothappbarlayout.SmoothAppBarLayout>
 
     </android.support.design.widget.CoordinatorLayout>
-
-    <ViewStub
-        android:id="@+id/stub_empty_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="@dimen/gank_header_height"
-        android:layout="@layout/view_empty"/>
-
-    <ViewStub
-        android:id="@+id/stub_video_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout="@layout/view_video"
-        android:inflatedId="@+id/inflate_video_view"/>
 
 </FrameLayout>

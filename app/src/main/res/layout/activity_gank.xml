@@ -29,6 +29,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="?actionBarSize"/>
 
-    <include layout="@layout/view_toolbar_with_indicator"/>
+    <include
+        layout="@layout/view_toolbar_with_indicator"/>
 
 </merge>

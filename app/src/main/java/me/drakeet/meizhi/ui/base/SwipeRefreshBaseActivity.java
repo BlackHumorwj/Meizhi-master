@@ -45,14 +45,17 @@ public abstract class SwipeRefreshBaseActivity extends ToolbarActivity implement
         ButterKnife.bind(this);
     }
 
-
+    /**onCreate –> onContentChanged –> onStart –> onPostCreate –> onResume –> onPostResume –> onPause –> onStop –> onDestroy*/
+    //onCreate 执行完后 执行
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         trySetupSwipeRefresh();
     }
 
-
+    /**
+     * 设置刷新
+     */
     void trySetupSwipeRefresh() {
         if (mSwipeRefreshLayout != null) {
             mSwipeRefreshLayout.setColorSchemeResources(R.color.refresh_progress_3, R.color.refresh_progress_2, R.color.refresh_progress_1);

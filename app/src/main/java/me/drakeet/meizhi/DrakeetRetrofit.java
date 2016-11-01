@@ -47,16 +47,17 @@ public class DrakeetRetrofit {
     DrakeetRetrofit() {
         OkHttpClient client = new OkHttpClient();
         client.setReadTimeout(12, TimeUnit.SECONDS);
-
+        //RestAdapter 就是 Retrofit
         RestAdapter.Builder builder = new RestAdapter.Builder();
         builder.setClient(new OkClient(client))
                .setLogLevel(RestAdapter.LogLevel.FULL)
                .setEndpoint("http://gank.io/api")
                .setConverter(new GsonConverter(gson));
         RestAdapter gankRestAdapter = builder.build();
+        gankService = gankRestAdapter.create(GankApi.class);
+
         builder.setEndpoint("https://leancloud.cn:443/1.1/classes");
         RestAdapter drakeetRestAdapter = builder.build();
-        gankService = gankRestAdapter.create(GankApi.class);
         drakeetService = drakeetRestAdapter.create(DrakeetApi.class);
     }
 

@@ -28,14 +28,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+
+import com.umeng.analytics.MobclickAgent;
+
+import java.util.Date;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import com.umeng.analytics.MobclickAgent;
-import java.util.Date;
 import me.drakeet.meizhi.LoveBus;
 import me.drakeet.meizhi.R;
-import me.drakeet.meizhi.ui.adapter.GankPagerAdapter;
 import me.drakeet.meizhi.event.OnKeyBackClickEvent;
+import me.drakeet.meizhi.ui.adapter.GankPagerAdapter;
 import me.drakeet.meizhi.ui.base.ToolbarActivity;
 import me.drakeet.meizhi.util.Dates;
 
@@ -43,24 +46,29 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
 
     public static final String EXTRA_GANK_DATE = "gank_date";
 
-    @Bind(R.id.pager) ViewPager mViewPager;
-    @Bind(R.id.tabLayout) TabLayout mTabLayout;
+    @Bind(R.id.pager)
+    ViewPager mViewPager;
+    @Bind(R.id.tabLayout)
+    TabLayout mTabLayout;
 
     GankPagerAdapter mPagerAdapter;
-    Date mGankDate;
+    Date             mGankDate;
 
 
-    @Override protected int provideContentViewId() {
+    @Override
+    protected int provideContentViewId() {
         return R.layout.activity_gank;
     }
 
 
-    @Override public boolean canBack() {
+    @Override
+    public boolean canBack() {
         return true;
     }
 
 
-    @Override protected void onCreate(Bundle savedInstanceState) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ButterKnife.bind(this);
         mGankDate = (Date) getIntent().getSerializableExtra(EXTRA_GANK_DATE);
@@ -69,15 +77,20 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
         initTabLayout();
     }
 
-
+    /**
+     * 初始化ViewPager
+     */
     private void initViewPager() {
         mPagerAdapter = new GankPagerAdapter(getSupportFragmentManager(), mGankDate);
         mViewPager.setAdapter(mPagerAdapter);
+        //设置预加载的数量 左右各一个
         mViewPager.setOffscreenPageLimit(1);
         mViewPager.addOnPageChangeListener(this);
     }
 
-
+    /**
+     * 初始化TabLayout 关联TabLayout与ViewPager
+     */
     private void initTabLayout() {
         for (int i = 0; i < mPagerAdapter.getCount(); i++) {
             mTabLayout.addTab(mTabLayout.newTab());
@@ -85,8 +98,12 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
         mTabLayout.setupWithViewPager(mViewPager);
     }
 
-
-    @Override public void onConfigurationChanged(Configuration newConfig) {
+    /**
+     *  手机的屏幕配置发生改变时调用
+     * @param newConfig
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             hideOrShowToolbar();
@@ -96,13 +113,11 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
     }
 
 
-    @Override protected void hideOrShowToolbar() {
+    @Override
+    protected void hideOrShowToolbar() {
         View toolbar = findViewById(R.id.toolbar_with_indicator);
         assert toolbar != null;
-        toolbar.animate()
-               .translationY(mIsHidden ? 0 : -mToolbar.getHeight())
-               .setInterpolator(new DecelerateInterpolator(2))
-               .start();
+        toolbar.animate().translationY(mIsHidden ? 0 : -mToolbar.getHeight()).setInterpolator(new DecelerateInterpolator(2)).start();
         mIsHidden = !mIsHidden;
         if (mIsHidden) {
             mViewPager.setTag(mViewPager.getPaddingTop());
@@ -114,11 +129,11 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
     }
 
 
-    @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                if (getResources().getConfiguration().orientation ==
-                        Configuration.ORIENTATION_LANDSCAPE) {
+                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     LoveBus.getLovelySeat().post(new OnKeyBackClickEvent());
                     return true;
                 }
@@ -127,32 +142,37 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
     }
 
 
-    @Override public boolean onCreateOptionsMenu(Menu menu) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_gank, menu);
         return true;
     }
 
 
-    @Override public boolean onOptionsItemSelected(MenuItem item) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
         return super.onOptionsItemSelected(item);
     }
 
 
-    @Override public void onResume() {
+    @Override
+    public void onResume() {
         super.onResume();
         MobclickAgent.onResume(this);
         LoveBus.getLovelySeat().register(this);
     }
 
 
-    @Override public void onPause() {
+    @Override
+    public void onPause() {
         super.onPause();
         MobclickAgent.onPause(this);
         LoveBus.getLovelySeat().unregister(this);
     }
 
 
-    @Override protected void onDestroy() {
+    @Override
+    protected void onDestroy() {
         mViewPager.removeOnPageChangeListener(this);
         super.onDestroy();
         ButterKnife.unbind(this);
@@ -165,12 +185,14 @@ public class GankActivity extends ToolbarActivity implements ViewPager.OnPageCha
     }
 
 
-    @Override public void onPageSelected(int position) {
+    @Override
+    public void onPageSelected(int position) {
         setTitle(Dates.toDate(mGankDate, -position));
     }
 
 
-    @Override public void onPageScrollStateChanged(int state) {
+    @Override
+    public void onPageScrollStateChanged(int state) {
 
     }
 }

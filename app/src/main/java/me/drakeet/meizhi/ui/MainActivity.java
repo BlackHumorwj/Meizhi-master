@@ -27,7 +27,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -63,6 +62,10 @@ import me.drakeet.meizhi.util.Toasts;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.functions.Func2;
 
 public class MainActivity extends SwipeRefreshBaseActivity {
 
@@ -106,12 +109,22 @@ public class MainActivity extends SwipeRefreshBaseActivity {
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        new Handler().postDelayed(() -> setRefresh(true), 358);
-        Log.e("onPostCreate", "调用了");
+//        new Handler().postDelayed(() -> setRefresh(true), 358);
+
+        //加载数据 更新UI
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setRefresh(true);
+            }
+        },358);
+
         loadData(true);
     }
 
-
+    /**
+     * 设置友盟相关信息
+     */
     private void setupUmeng() {
         UmengUpdateAgent.update(this);
         UmengUpdateAgent.setDeltaUpdate(false);
@@ -155,29 +168,101 @@ public class MainActivity extends SwipeRefreshBaseActivity {
         mLastVideoIndex = 0;
         // @formatter:off
         Subscription s = Observable
+
+                .zip(sGankIO.getMeizhiData(mPage), sGankIO.get休息视频Data(mPage), new Func2<MeizhiData, 休息视频Data, MeizhiData>() {
+                    @Override
+                    public MeizhiData call(MeizhiData meizhiData, 休息视频Data 休息视频Data) {
+                        return createMeizhiDataWith休息视频Desc(meizhiData,休息视频Data);
+                    }
+                })
                 //合并多个数据流，然后发送(Emit)最终合并的数据
-                .zip(sGankIO.getMeizhiData(mPage), sGankIO.get休息视频Data(mPage), this::createMeizhiDataWith休息视频Desc)//
-                //事件对象的直接变换 一对一的转换
-                .map(meizhiData -> meizhiData.results)//
-                //将事件对象变换 返回一个Observable
-                .flatMap(Observable::from)//
+                //.zip(sGankIO.getMeizhiData(mPage), sGankIO.get休息视频Data(mPage), this::createMeizhiDataWith休息视频Desc)//
+
+
+                .map(new Func1<MeizhiData, List<Meizhi>>() {
+                    @Override
+                    public List<Meizhi> call(MeizhiData meizhiData) {
+                        return meizhiData.results;
+                    }
+                })
+                //事件对象的直接变换 一对一的转换 一个对象转为另一个对象
+                //.map(meizhiData -> meizhiData.results)//
+
+
+                .flatMap(new Func1<List<Meizhi>, Observable<Meizhi>>() {
+                    @Override
+                    public Observable<Meizhi> call(List<Meizhi> meizhis) {
+
+                        return Observable.from(meizhis);
+                    }
+                })
+                //将事件对象变换 返回一个新的Observable
+                //.flatMap(Observable::from)//
+
+
+                .toSortedList(new Func2<Meizhi, Meizhi, Integer>() {
+                    @Override
+                    public Integer call(Meizhi meizhi, Meizhi meizhi2) {
+                        return meizhi2.publishedAt.compareTo(meizhi.publishedAt);
+                    }
+                })
                 //排序
-                .toSortedList((meizhi1, meizhi2) -> meizhi2.publishedAt.compareTo(meizhi1.publishedAt))//
+               // .toSortedList((meizhi1, meizhi2) -> meizhi2.publishedAt.compareTo(meizhi1.publishedAt))//
+
+
+
+
+                .doOnNext(new Action1<List<Meizhi>>() {
+                    @Override
+                    public void call(List<Meizhi> meizhis) {
+                        saveMeizhis(meizhis);
+                    }
+                })
                 //保存/缓存网络结果
-                .doOnNext(this::saveMeizhis)//
+               // .doOnNext(this::saveMeizhis)//
+
+
                 //指定线程
                 .observeOn(AndroidSchedulers.mainThread())//
 
-                .finallyDo(() -> setRefresh(false))//
 
-                .subscribe(meizhis -> {
+                // onCompleted 或者 onError 后被调用
+                .finallyDo(new Action0() {
+                    @Override
+                    public void call() {
+                        setRefresh(false);
+                    }
+                })
+                //.finallyDo(() -> setRefresh(false))//
+
+
+
+
+                .subscribe(new Action1<List<Meizhi>>() {
+                    @Override
+                    public void call(List<Meizhi> meizhis) {
+                        if (clean) {
+                            mMeizhiList.clear();
+                        }
+                        mMeizhiList.addAll(meizhis);
+                        mMeizhiListAdapter.notifyDataSetChanged();
+                        setRefresh(false);
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        loadError(throwable);
+                    }
+                });
+                //观察者订阅被观察者  将被观察者的回调数据进行处理
+               /* .subscribe(meizhis -> {
                     if (clean) {
                         mMeizhiList.clear();
                     }
                     mMeizhiList.addAll(meizhis);
                     mMeizhiListAdapter.notifyDataSetChanged();
                     setRefresh(false);
-                }, throwable -> loadError(throwable));
+                }, throwable -> loadError(throwable));*/
         // @formatter:on
         addSubscription(s);
     }
@@ -201,6 +286,12 @@ public class MainActivity extends SwipeRefreshBaseActivity {
     }
 
 
+    /**
+     *  将zip获取的数据进行合并处理
+     * @param data
+     * @param love
+     * @return
+     */
     private MeizhiData createMeizhiDataWith休息视频Desc(MeizhiData data, 休息视频Data love) {
         for (Meizhi meizhi : data.results) {
             meizhi.desc = meizhi.desc + " " + getFirstVideoDesc(meizhi.publishedAt, love.results);

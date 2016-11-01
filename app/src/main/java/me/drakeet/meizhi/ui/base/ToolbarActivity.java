@@ -55,12 +55,14 @@ public abstract class ToolbarActivity extends BaseActivity {
         mToolbar.setOnClickListener(v -> onToolbarClick());
         setSupportActionBar(mToolbar);
 
+        //设置返回返回键
         if (canBack()) {
             ActionBar actionBar = getSupportActionBar();
             if (actionBar != null)
                 actionBar.setDisplayHomeAsUpEnabled(true);
         }
         if (Build.VERSION.SDK_INT >= 21) {
+            // L 设置阴影的高度
             mAppBar.setElevation(10.6f);
         }
     }
@@ -86,7 +88,9 @@ public abstract class ToolbarActivity extends BaseActivity {
         mAppBar.setAlpha(alpha);
     }
 
-
+    /**
+     * 隐藏 显示 Toolbar
+     */
     protected void hideOrShowToolbar() {
         mAppBar.animate().translationY(mIsHidden ? 0 : -mAppBar.getHeight()).setInterpolator(new DecelerateInterpolator(2)).start();
         mIsHidden = !mIsHidden;
